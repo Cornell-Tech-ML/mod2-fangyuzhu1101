@@ -427,7 +427,7 @@ def tensor_reduce(
                 else:
                     reduction_result = fn(reduction_result, a_storage[input_position])
 
-            # Store the reduction result in the output tensor            
+            # Store the reduction result in the output tensor
             output_pos = index_to_position(output_index, out_strides)
             out[output_pos] = reduction_result
 
