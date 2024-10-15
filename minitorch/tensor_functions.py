@@ -256,7 +256,7 @@ class Permute(Function):
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
         """Reverse the permutation of the dimensions with gradients back to the original order."""
         (order,) = ctx.saved_values
-        # Use the mapping to construct the original order
+        # Construct the original order
         original_order = [0] * len(order)
         for i, o in enumerate(order):
             original_order[o] = i

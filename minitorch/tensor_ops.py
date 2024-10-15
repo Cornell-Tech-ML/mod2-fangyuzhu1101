@@ -274,23 +274,23 @@ def tensor_map(
         # TODO: Implement for Task 2.3.
         # raise NotImplementedError("Need to implement for Task 2.3")
 
-        # Get the total number of elements by multiplying all dimensions
-        out_len = int(np.prod(out_shape))
+        # Get the total number of elements in the output tensor by multiplying all dimensions
+        num_elements_out_tensor = int(np.prod(out_shape))
 
         # Iterate over every index to initialize in the output tensor
-        out_index = np.zeros_like(out_shape, dtype=np.int32)
-        in_index = np.zeros_like(in_shape, dtype=np.int32)
+        output_index = np.zeros_like(out_shape, dtype=np.int32)
+        input_index = np.zeros_like(in_shape, dtype=np.int32)
 
-        for i in range(out_len):
-            # Convert the flat index to multidimensional indices for out
-            to_index(i, out_shape, out_index)
+        for flat_index in range(num_elements_out_tensor):
+            # Convert the flat index to multidimensional indices for the output tensor
+            to_index(flat_index, out_shape, output_index)
 
             # Broadcast the multidimensional index to the input tensor's shape
-            broadcast_index(out_index, out_shape, in_shape, in_index)
+            broadcast_index(output_index, out_shape, in_shape, input_index)
 
             # Get the flat positions for in and out tensors of the current index in the storage arrays
-            out_pos = index_to_position(out_index, out_strides)
-            in_pos = index_to_position(in_index, in_strides)
+            out_pos = index_to_position(output_index, out_strides)
+            in_pos = index_to_position(input_index, in_strides)
 
             # Apply the function to the input and store result in the output array
             out[out_pos] = fn(in_storage[in_pos])
@@ -342,24 +342,24 @@ def tensor_zip(
         # TODO: Implement for Task 2.3.
         # raise NotImplementedError("Need to implement for Task 2.3")
 
-        # Get the total number of elements by multiplying all dimensions
-        out_len = int(np.prod(out_shape))
+        # Get the total number of elements in the output tensor by multiplying all dimensions
+        num_elements_out_tensor = int(np.prod(out_shape))
 
         # Iterate over every index to initialize in the output tensor
-        out_index = np.zeros_like(out_shape, dtype=np.int32)
+        output_index = np.zeros_like(out_shape, dtype=np.int32)
         a_index = np.zeros_like(a_shape, dtype=np.int32)
         b_index = np.zeros_like(b_shape, dtype=np.int32)
 
-        for i in range(out_len):
-            # Convert the flat index to multidimensional indices for out
-            to_index(i, out_shape, out_index)
+        for flat_index in range(num_elements_out_tensor):
+            # Convert the flat index to multidimensional indices for the output tensor
+            to_index(flat_index, out_shape, output_index)
 
             # Broadcast the multidimensional index to the input tensors' shapes
-            broadcast_index(out_index, out_shape, a_shape, a_index)
-            broadcast_index(out_index, out_shape, b_shape, b_index)
+            broadcast_index(output_index, out_shape, a_shape, a_index)
+            broadcast_index(output_index, out_shape, b_shape, b_index)
 
             # Get the flat positions for a, b, and out tensors
-            out_pos = index_to_position(out_index, out_strides)
+            out_pos = index_to_position(output_index, out_strides)
             a_pos = index_to_position(a_index, a_strides)
             b_pos = index_to_position(b_index, b_strides)
 
@@ -399,41 +399,37 @@ def tensor_reduce(
         # TODO: Implement for Task 2.3.
         # raise NotImplementedError("Need to implement for Task 2.3")
 
-        # Get the total number of elements by multiplying all dimensions
-        out_len = int(np.prod(out_shape))
+        # Get the total number of elements in the output tensor by multiplying all dimensions
+        num_elements_out_tensor = int(np.prod(out_shape))
 
         # Iterate over every index to initialize in the output tensor
-        out_index = np.zeros_like(out_shape, dtype=np.int32)
+        output_index = np.zeros_like(out_shape, dtype=np.int32)
 
-        for i in range(out_len):
-            # Convert the flat index to multidimensional indices for out
-            to_index(i, out_shape, out_index)
-            assert out_index[reduce_dim] == 0
+        for flat_index in range(num_elements_out_tensor):
+            # Convert the flat index to multidimensional indices for the output tensor
+            to_index(flat_index, out_shape, output_index)
 
             # Initialize the result to the identity element (start value)
-            result = 0.0
+            reduction_result = 0.0
             # Iterate over the elements of the dimension to reduce
-            for j in range(a_shape[reduce_dim]):
-                # Set the index of the dimension to reduce to the current element
-                a_index = np.copy(out_index)
-                # Set the current index in the reduce dimension
-                a_index[reduce_dim] = j
+            for reduce_index in range(a_shape[reduce_dim]):
+                input_index = np.copy(output_index)
+                # Set the current index in the reduce dimension for the input tensor
+                input_index[reduce_dim] = reduce_index
 
-                # Convert the a_index to the flat position in a_storage to
-                # get the position of the current index in the storage array
-                a_pos = index_to_position(a_index, a_strides)
+                # Convert the input_index to a flat position in the input storage array
+                input_position = index_to_position(input_index, a_strides)
 
-                # Initialize the output value with first element of the dimension to reduce
-                if j == 0:
-                    result = a_storage[a_pos]
-
-                # Else, apply the reduction function over the specified dimension
+                # Apply the reduction function for the first element in the reduce dimension
+                if reduce_index == 0:
+                    reduction_result = a_storage[input_position]
+                # Else, apply the reduction function for subsequent elements
                 else:
-                    result = fn(result, a_storage[a_pos])
+                    reduction_result = fn(reduction_result, a_storage[input_position])
 
-            # Store the result in the output tensor
-            out_pos = index_to_position(out_index, out_strides)
-            out[out_pos] = result
+            # Store the reduction result in the output tensor            
+            output_pos = index_to_position(output_index, out_strides)
+            out[output_pos] = reduction_result
 
     return _reduce
 
